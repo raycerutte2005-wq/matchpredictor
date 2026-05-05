@@ -16,19 +16,6 @@
             vertical-align: middle;
             margin-left: 6px;
         }
-        .btn-edit, .btn-delete {
-            border: none;
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            font-weight: bold;
-            transition: opacity 0.2s;
-        }
-        .btn-edit { background: #334155; color: #f8fafc; }
-        .btn-edit:hover { background: #22c55e; color: #0f172a; }
-        .btn-delete { background: #7f1d1d; color: #fca5a5; margin-left: 4px; }
-        .btn-delete:hover { background: #ef4444; color: #fff; }
         #admin-modal {
             display: none;
             position: fixed;
@@ -46,7 +33,7 @@
             border-radius: 14px;
             padding: 2rem;
             width: 90%;
-            max-width: 360px;
+            max-width: 380px;
             text-align: center;
         }
         .modal-box h3 { margin-bottom: 1rem; color: var(--gold); }
@@ -67,18 +54,28 @@
         #modal-cancel { background: #334155; color: #f8fafc; }
         #modal-ok { background: var(--gold); color: #0f172a; }
         #admin-error { color: #ef4444; font-size: 0.8rem; margin-bottom: 0.5rem; display: none; }
-        .admin-controls-bar {
+
+        /* Caja de instrucciones admin */
+        #admin-info {
             display: none;
-            align-items: center;
-            gap: 0.8rem;
-            margin-bottom: 1.2rem;
-            padding: 0.8rem 1rem;
-            background: rgba(245,158,11,0.1);
+            background: rgba(245,158,11,0.08);
             border: 1px solid rgba(245,158,11,0.3);
             border-radius: 10px;
-            flex-wrap: wrap;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
+            color: #f8fafc;
+            line-height: 1.6;
         }
-        .admin-controls-bar.show { display: flex; }
+        #admin-info.show { display: block; }
+        #admin-info strong { color: var(--gold); }
+        #admin-info code {
+            background: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #22c55e;
+        }
         #lock-btn {
             background: none;
             border: 1px solid #334155;
@@ -87,24 +84,16 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.8rem;
+            margin-left: 0.5rem;
         }
         #lock-btn:hover { border-color: #ef4444; color: #ef4444; }
+
         .sync-indicator {
             font-size: 0.75rem;
-            color: #22c55e;
+            color: #94a3b8;
             display: flex;
             align-items: center;
             gap: 4px;
-        }
-        .sync-dot {
-            width: 7px; height: 7px;
-            background: #22c55e;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
         }
     </style>
 </head>
@@ -127,20 +116,22 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.8rem;">
                     <div style="display:flex; align-items:center; gap:0.8rem;">
                         <h2 style="margin:0; border:none; padding:0;">Tabla de Posiciones</h2>
-                        <span class="sync-indicator" id="sync-status">
-                            <span class="sync-dot"></span> En vivo
-                        </span>
+                        <span class="sync-indicator" id="sync-status">📄 data.json</span>
                     </div>
-                    <button id="admin-btn" onclick="pedirAdmin()" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:5px 14px; border-radius:8px; cursor:pointer; font-size:0.85rem;">
-                        Predicciones
-                    </button>
+                    <div>
+                        <button id="admin-btn" onclick="pedirAdmin()" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:5px 14px; border-radius:8px; cursor:pointer; font-size:0.85rem;">
+                            Admin
+                        </button>
+                        <button id="lock-btn" onclick="bloquearAdmin()" style="display:none;">🔒 Salir</button>
+                    </div>
                 </div>
 
-                <!-- Barra cuando admin activo -->
-                <div id="admin-bar" class="admin-controls-bar">
-                    <span style="color:var(--gold); font-weight:bold; font-size:0.9rem;">⚙ Admin activo</span>
-                    <span style="color:#94a3b8; font-size:0.8rem;">Edita o elimina jugadores directamente en la tabla</span>
-                    <button id="lock-btn" onclick="bloquearAdmin()">🔒 Salir</button>
+                <!-- Instrucciones para el admin -->
+                <div id="admin-info">
+                    <strong>⚙ Modo Admin activo</strong><br>
+                    Para editar puntos, abre el archivo <code>data.json</code> en el repositorio de GitHub y modifica el valor de <code>"puntos"</code> de cada jugador. Los cambios se reflejan al recargar la página.<br><br>
+                    Para agregar un jugador nuevo, agrega una línea:<br>
+                    <code>{ "usuario": "nombre", "puntos": 0 }</code>
                 </div>
 
                 <table>
@@ -149,13 +140,16 @@
                             <th style="width:40px">#</th>
                             <th>Jugador</th>
                             <th>Puntos</th>
-                            <th id="col-acciones" style="display:none;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-body">
                         <tr><td colspan="3" style="text-align:center; color:#94a3b8; padding:2rem;">Cargando...</td></tr>
                     </tbody>
                 </table>
+
+                <p style="color:#94a3b8; font-size:0.75rem; margin-top:1rem; text-align:right;">
+                    Última carga: <span id="ultima-carga">—</span>
+                </p>
 
             </div>
         </aside>
@@ -175,64 +169,50 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-        import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDO5fHYaIbyhyill2SlnbrRmQAFSzFiEQg",
-            authDomain: "match-a7d84.firebaseapp.com",
-            projectId: "match-a7d84",
-            storageBucket: "match-a7d84.firebasestorage.app",
-            messagingSenderId: "35409465228",
-            appId: "1:35409465228:web:292a993b35d3d35371d0a9",
-            measurementId: "G-QF49XZ0QNG"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
+    <script>
         const usuarioActivo = localStorage.getItem('fw_usuario_activo');
         if (!usuarioActivo) window.location.href = 'index.html';
 
+        // ─────────────────────────────────────────
+        // CONTRASEÑA ADMIN — cámbiala si quieres
+        // ─────────────────────────────────────────
         const ADMIN_PASSWORD = 'slpt2020#';
+
         let modoAdmin = false;
         let tablaActual = [];
 
-        // Escuchar cambios en tiempo real — se actualiza automáticamente
-        // en TODOS los dispositivos cuando alguien cambia algo
-        const tablaRef = ref(db, 'tabla');
-        onValue(tablaRef, (snapshot) => {
-            const data = snapshot.val();
-            tablaActual = data ? Object.values(data) : [];
-            renderTabla(tablaActual);
-        });
+        // Cargar datos desde data.json (sin caché para obtener lo más reciente)
+        async function cargarTabla() {
+            try {
+                const res = await fetch('data.json?t=' + Date.now());
+                if (!res.ok) throw new Error('No se pudo cargar data.json');
+                const data = await res.json();
+                tablaActual = data.jugadores || [];
+                renderTabla(tablaActual);
+                document.getElementById('ultima-carga').textContent = new Date().toLocaleTimeString('es-MX');
+                document.getElementById('sync-status').textContent = '✅ data.json';
+            } catch (err) {
+                console.error(err);
+                document.getElementById('sync-status').textContent = '⚠ Error al cargar';
+                document.getElementById('tabla-body').innerHTML =
+                    '<tr><td colspan="3" style="text-align:center; color:#ef4444; padding:2rem;">No se pudo cargar data.json.<br>Verifica que el archivo existe en el repositorio.</td></tr>';
+            }
+        }
 
         function renderTabla(tabla) {
-            tabla = [...tabla].sort((a, b) => b.puntos - a.puntos);
+            const sorted = [...tabla].sort((a, b) => b.puntos - a.puntos);
             const tbody = document.getElementById('tabla-body');
             tbody.innerHTML = '';
 
-            document.getElementById('col-acciones').style.display = modoAdmin ? '' : 'none';
-
-            if (tabla.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:2rem;">No hay jugadores aún.</td></tr>';
+            if (sorted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8; padding:2rem;">No hay jugadores en data.json.</td></tr>';
                 return;
             }
 
-            tabla.forEach((jugador, index) => {
+            sorted.forEach((jugador, index) => {
                 const esActivo = jugador.usuario === usuarioActivo;
                 const tr = document.createElement('tr');
                 tr.style.background = esActivo ? 'rgba(34,197,94,0.07)' : '';
-
-                let accionesHTML = '';
-                if (modoAdmin) {
-                    accionesHTML = `<td>
-                        <button class="btn-edit" onclick="window.editarPuntos('${jugador.usuario}')">✏ Editar</button>
-                        <button class="btn-delete" onclick="window.eliminarJugador('${jugador.usuario}')">🗑 Eliminar</button>
-                    </td>`;
-                }
 
                 tr.innerHTML = `
                     <td><span class="rank">#${index + 1}</span></td>
@@ -240,79 +220,49 @@
                         ${jugador.usuario}${esActivo ? ' <span style="color:#94a3b8; font-size:0.8rem;">(tú)</span>' : ''}
                     </td>
                     <td><span class="points">${jugador.puntos}</span> pts</td>
-                    ${accionesHTML}
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // Editar puntos → guarda en Firebase → se actualiza en TODOS
-        window.editarPuntos = async function(usuario) {
-            const jugador = tablaActual.find(u => u.usuario === usuario);
-            if (!jugador) return;
-
-            const nuevoPts = prompt(`Nuevos puntos para "${usuario}":`, jugador.puntos);
-            if (nuevoPts === null) return;
-            const num = parseInt(nuevoPts);
-            if (isNaN(num) || num < 0) {
-                alert('Ingresa un número válido (≥ 0).');
-                return;
-            }
-
-            try {
-                await update(ref(db, 'tabla/' + usuario), { puntos: num });
-            } catch (err) {
-                alert('Error al guardar. Verifica tu conexión.');
-                console.error(err);
-            }
-        };
-
-        // Eliminar jugador → borra de Firebase → se actualiza en TODOS
-        window.eliminarJugador = async function(usuario) {
-            if (!confirm(`¿Seguro que quieres eliminar a "${usuario}" de la tabla?`)) return;
-            try {
-                await remove(ref(db, 'tabla/' + usuario));
-            } catch (err) {
-                alert('Error al eliminar.');
-                console.error(err);
-            }
-        };
-
-        window.pedirAdmin = function() {
+        function pedirAdmin() {
             document.getElementById('admin-pass').value = '';
             document.getElementById('admin-error').style.display = 'none';
             document.getElementById('admin-modal').classList.add('show');
             setTimeout(() => document.getElementById('admin-pass').focus(), 100);
-        };
+        }
 
-        window.cerrarModal = function() {
+        function cerrarModal() {
             document.getElementById('admin-modal').classList.remove('show');
-        };
+        }
 
-        window.verificarAdmin = function() {
+        function verificarAdmin() {
             const pass = document.getElementById('admin-pass').value;
             if (pass === ADMIN_PASSWORD) {
                 modoAdmin = true;
                 cerrarModal();
-                document.getElementById('admin-bar').classList.add('show');
+                document.getElementById('admin-info').classList.add('show');
                 document.getElementById('admin-btn').style.display = 'none';
-                renderTabla(tablaActual);
+                document.getElementById('lock-btn').style.display = '';
             } else {
                 document.getElementById('admin-error').style.display = 'block';
             }
-        };
+        }
 
-        window.bloquearAdmin = function() {
+        function bloquearAdmin() {
             modoAdmin = false;
-            document.getElementById('admin-bar').classList.remove('show');
+            document.getElementById('admin-info').classList.remove('show');
             document.getElementById('admin-btn').style.display = '';
-            renderTabla(tablaActual);
-        };
+            document.getElementById('lock-btn').style.display = 'none';
+        }
 
-        window.cerrarSesion = function() {
+        function cerrarSesion() {
             localStorage.removeItem('fw_usuario_activo');
             window.location.href = 'index.html';
-        };
+        }
+
+        // Cargar al iniciar
+        cargarTabla();
     </script>
 
 </body>

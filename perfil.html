@@ -45,48 +45,37 @@
         </section>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDO5fHYaIbyhyill2SlnbrRmQAFSzFiEQg",
-            authDomain: "match-a7d84.firebaseapp.com",
-            projectId: "match-a7d84",
-            storageBucket: "match-a7d84.firebasestorage.app",
-            messagingSenderId: "35409465228",
-            appId: "1:35409465228:web:292a993b35d3d35371d0a9",
-            measurementId: "G-QF49XZ0QNG"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
+    <script>
         const usuarioActivo = localStorage.getItem('fw_usuario_activo');
         if (!usuarioActivo) window.location.href = 'index.html';
 
-        // Mostrar nombre
         document.getElementById('nombre-perfil').textContent = usuarioActivo;
         document.getElementById('usuario-display').textContent = usuarioActivo;
 
-        // Leer puntos y posición en tiempo real desde Firebase
-        const tablaRef = ref(db, 'tabla');
-        onValue(tablaRef, (snapshot) => {
-            const data = snapshot.val();
-            const tabla = data ? Object.values(data).sort((a, b) => b.puntos - a.puntos) : [];
+        // Leer datos desde data.json
+        fetch('data.json?t=' + Date.now())
+            .then(res => {
+                if (!res.ok) throw new Error('No se pudo cargar data.json');
+                return res.json();
+            })
+            .then(data => {
+                const tabla = (data.jugadores || []).sort((a, b) => b.puntos - a.puntos);
+                const miData = tabla.find(u => u.usuario === usuarioActivo);
+                const miPosicion = tabla.findIndex(u => u.usuario === usuarioActivo) + 1;
 
-            const miData = tabla.find(u => u.usuario === usuarioActivo);
-            const miPosicion = tabla.findIndex(u => u.usuario === usuarioActivo) + 1;
+                document.getElementById('puntos-display').textContent = miData ? miData.puntos + ' pts' : '0 pts';
+                document.getElementById('posicion-display').textContent = miPosicion > 0 ? '#' + miPosicion : '—';
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('puntos-display').textContent = 'Error';
+                document.getElementById('posicion-display').textContent = '—';
+            });
 
-            document.getElementById('puntos-display').textContent = miData ? miData.puntos + ' pts' : '0 pts';
-            document.getElementById('posicion-display').textContent = miPosicion > 0 ? '#' + miPosicion : '—';
-        });
-
-        window.cerrarSesion = function() {
+        function cerrarSesion() {
             localStorage.removeItem('fw_usuario_activo');
             window.location.href = 'index.html';
-        };
+        }
     </script>
 
 </body>

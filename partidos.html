@@ -27,68 +27,76 @@
             <h3>Desacierto -1pts</h3>
             <div class="matches-grid">
 
-                
+                <!-- =====================================================
+                     PARTIDOS — edita local/visitante/hora/imágenes aquí
+                     El id="card-X" debe coincidir con el tercer parámetro
+                     de abrirModal('Local', 'Visitante', 'card-X')
+                     ===================================================== -->
+
                 <div class="match-card" id="card-1">
                     <div class="team">
-                        <div class="team-logo" style="background-image: url(Imagenes/images\ 4.jpg); background-color:#dc2626;"></div>
+                        <div class="team-logo" style="background-image: url('Imagenes/images 4.jpg'); background-color:#dc2626;"></div>
                         <span>Arsenal</span>
                     </div>
                     <div class="match-info">
                         <div class="vs">VS</div>
                         <div class="match-time">Mañana, 3:00</div>
-                        <button class="predict-btn" onclick="abrirModal('Arsenal', 'Atl Madrid', 'card-2')">Predecir</button>
+                        <button class="predict-btn" onclick="abrirModal('Arsenal', 'Atl Madrid', 'card-1')">Predecir</button>
                     </div>
                     <div class="team">
-                        <div class="team-logo" style="background-image:url(Imagenes/images\ 5.jpg); background-color:#f58383;"></div>
+                        <div class="team-logo" style="background-image:url('Imagenes/images 5.jpg'); background-color:#f58383;"></div>
                         <span>Atl Madrid</span>
                     </div>
                 </div>
 
                 <div class="match-card" id="card-2">
                     <div class="team">
-                        <div class="team-logo" style="background-image:url(Imagenes/images\ 3.jpg); background-color :#ef4444;"></div>
+                        <div class="team-logo" style="background-image:url('Imagenes/images 3.jpg'); background-color:#ef4444;"></div>
                         <span>Bayern</span>
                     </div>
                     <div class="match-info">
                         <div class="vs">VS</div>
                         <div class="match-time">Mier, 3:00</div>
-                        <button class="predict-btn" onclick="abrirModal('Bayern Munich', 'PSG', 'card-3')">Predecir</button>
+                        <button class="predict-btn" onclick="abrirModal('Bayern Munich', 'PSG', 'card-2')">Predecir</button>
                     </div>
                     <div class="team">
-                        <div class="team-logo" style="background-image:url(Imagenes/images\ 8.jpg); background-color:#292c6a;"></div>
+                        <div class="team-logo" style="background-image:url('Imagenes/images 8.jpg'); background-color:#292c6a;"></div>
                         <span>PSG</span>
                     </div>
                 </div>
+
                 <div class="match-card" id="card-3">
                     <div class="team">
-                        <div class="team-logo" style="background-image:url(Imagenes/images\ 7.jpg); background-color :#ef4444;"></div>
+                        <div class="team-logo" style="background-image:url('Imagenes/images 7.jpg'); background-color:#ef4444;"></div>
                         <span>Liverpool</span>
                     </div>
                     <div class="match-info">
                         <div class="vs">VS</div>
-                        <div class="match-time">Sabr, 7:30</div>
+                        <div class="match-time">Sáb, 7:30</div>
                         <button class="predict-btn" onclick="abrirModal('Liverpool', 'Chelsea', 'card-3')">Predecir</button>
                     </div>
                     <div class="team">
-                        <div class="team-logo" style="background-image:url(Imagenes/images\ 6.jpg); background-color:#292c6a;"></div>
+                        <div class="team-logo" style="background-image:url('Imagenes/images 6.jpg'); background-color:#292c6a;"></div>
                         <span>Chelsea</span>
                     </div>
                 </div>
+
                 <div class="match-card" id="card-4">
                     <div class="team">
-                        <div class="team-logo" style="background-image: url(Imagenes/images.jpg)"></div>
+                        <div class="team-logo" style="background-image: url('Imagenes/images.jpg')"></div>
                         <span>Barcelona</span>
                     </div>
                     <div class="match-info">
                         <div class="vs">VS</div>
                         <div class="match-time">Dom, 3:00</div>
-                        <button class="predict-btn" onclick="abrirModal('FC Barcelona', 'Real Madrid', 'card-1')">Predecir</button>
+                        <button class="predict-btn" onclick="abrirModal('FC Barcelona', 'Real Madrid', 'card-4')">Predecir</button>
                     </div>
                     <div class="team">
-                        <div class="team-logo" style="background-image: url(Imagenes/images\ 2.jpg)"></div>
+                        <div class="team-logo" style="background-image: url('Imagenes/images 2.jpg')"></div>
                         <span>Real Madrid</span>
                     </div>
                 </div>
+
             </div>
         </section>
     </div>
@@ -154,17 +162,22 @@
             const golesVisitante = document.getElementById('goles-visitante').value;
             const mensaje = `🏆 *FirstWin - Predicción de ${usuarioActivo}*\n⚽ ${localActual} ${golesLocal} - ${golesVisitante} ${visitanteActual}`;
 
-            // Enviar WhatsApp
+            // Enviar por WhatsApp
             const numero = '52676182';
             const url = 'https://wa.me/' + numero + '?text=' + encodeURIComponent(mensaje);
             window.open(url, '_blank');
 
-            // Marcar botón como predicho
+            // Marcar el botón de ESA tarjeta como predicho
             const card = document.getElementById(cardActual);
             const btn = card.querySelector('.predict-btn');
             btn.textContent = '✔ Predicho';
             btn.style.backgroundColor = '#94a3b8';
             btn.disabled = true;
+
+            // Guardar en localStorage para persistir si recarga
+            const predichos = JSON.parse(localStorage.getItem('fw_predichos') || '{}');
+            predichos[cardActual] = true;
+            localStorage.setItem('fw_predichos', JSON.stringify(predichos));
 
             cerrarModal();
             mostrarToast();
@@ -180,6 +193,22 @@
             localStorage.removeItem('fw_usuario_activo');
             window.location.href = 'index.html';
         }
+
+        // Restaurar estado de botones predichos al cargar la página
+        (function restaurarPredichos() {
+            const predichos = JSON.parse(localStorage.getItem('fw_predichos') || '{}');
+            Object.keys(predichos).forEach(cardId => {
+                const card = document.getElementById(cardId);
+                if (card) {
+                    const btn = card.querySelector('.predict-btn');
+                    if (btn) {
+                        btn.textContent = '✔ Predicho';
+                        btn.style.backgroundColor = '#94a3b8';
+                        btn.disabled = true;
+                    }
+                }
+            });
+        })();
     </script>
 
 </body>
