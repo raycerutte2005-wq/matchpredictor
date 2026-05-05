@@ -37,31 +37,16 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
         import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
 
-        // ============================================================
-        // REEMPLAZA ESTOS VALORES CON LOS DE TU PROYECTO EN FIREBASE
-        // (Lee las instrucciones al final de este archivo)
-        // ============================================================
-       // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+        const firebaseConfig = {
+            apiKey: "AIzaSyDO5fHYaIbyhyill2SlnbrRmQAFSzFiEQg",
+            authDomain: "match-a7d84.firebaseapp.com",
+            projectId: "match-a7d84",
+            storageBucket: "match-a7d84.firebasestorage.app",
+            messagingSenderId: "35409465228",
+            appId: "1:35409465228:web:292a993b35d3d35371d0a9",
+            measurementId: "G-QF49XZ0QNG"
+        };
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDO5fHYaIbyhyill2SlnbrRmQAFSzFiEQg",
-    authDomain: "match-a7d84.firebaseapp.com",
-    projectId: "match-a7d84",
-    storageBucket: "match-a7d84.firebasestorage.app",
-    messagingSenderId: "35409465228",
-    appId: "1:35409465228:web:292a993b35d3d35371d0a9",
-    measurementId: "G-QF49XZ0QNG"
-};
-
-// Initialize Firebase
-
-        const analytics = getAnalytics(app);
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
