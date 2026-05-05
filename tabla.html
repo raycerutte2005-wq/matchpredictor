@@ -254,8 +254,8 @@
             const nuevoPts = prompt(`Nuevos puntos para "${usuario}":`, jugador.puntos);
             if (nuevoPts === null) return;
             const num = parseInt(nuevoPts);
-            if (isNaN(num) || num < 0) {
-                alert('Ingresa un número válido (≥ 0).');
+            if (isNaN(num)) {
+                alert('Ingresa un número válido.');
                 return;
             }
 
