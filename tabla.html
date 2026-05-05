@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FirstWin - Tabla</title>
+    <link rel="stylesheet" href="./CSS/Predicciones.css">
+    <style>
+        .admin-badge {
+            font-size: 0.65rem;
+            background: var(--gold);
+            color: #0f172a;
+            padding: 2px 7px;
+            border-radius: 20px;
+            font-weight: bold;
+            vertical-align: middle;
+            margin-left: 6px;
+        }
+        .btn-edit, .btn-delete {
+            border: none;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        .btn-edit { background: #334155; color: #f8fafc; }
+        .btn-edit:hover { background: #22c55e; color: #0f172a; }
+        .btn-delete { background: #7f1d1d; color: #fca5a5; margin-left: 4px; }
+        .btn-delete:hover { background: #ef4444; color: #fff; }
+        .input-pts {
+            width: 70px;
+            padding: 4px 8px;
+            background: #0f172a;
+            color: #f8fafc;
+            border: 2px solid #22c55e;
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: center;
+        }
+        .admin-lock {
+            display: none;
+        }
+        /* Modal de contraseña admin */
+        #admin-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        #admin-modal.show { display: flex; }
+        .modal-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 360px;
+            text-align: center;
+        }
+        .modal-box h3 { margin-bottom: 1rem; color: var(--gold); }
+        .modal-box input {
+            width: 100%;
+            padding: 0.7rem;
+            background: #0f172a;
+            color: #f8fafc;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .modal-box input:focus { border-color: #22c55e; outline: none; }
+        .modal-actions { display: flex; gap: 1rem; }
+        .modal-actions button { flex: 1; padding: 0.7rem; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        #modal-cancel { background: #334155; color: #f8fafc; }
+        #modal-ok { background: var(--gold); color: #0f172a; }
+        #admin-error { color: #ef4444; font-size: 0.8rem; margin-bottom: 0.5rem; display: none; }
+        .admin-controls-bar {
+            display: none;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+            padding: 0.8rem 1rem;
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 10px;
+        }
+        .admin-controls-bar.show { display: flex; }
+        #lock-btn {
+            background: none;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        #lock-btn:hover { border-color: #ef4444; color: #ef4444; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">MXP</div>
+        <ul class="nav-links">
+            <li><a href="partidos.html">Partidos</a></li>
+            <li><a href="tabla.html">Tabla</a></li>
+            <li><a href="perfil.html">Perfil</a></li>
+            <li><a href="#" onclick="cerrarSesion()">Cerrar Sesión</a></li>
+        </ul>
+    </nav>
+
+    <div class="container" style="grid-template-columns: 1fr; max-width: 700px;">
+        <aside>
+            <div class="leaderboard" style="margin-top: 0;">
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.8rem;">
+                    <h2 style="margin:0; border:none; padding:0;">Tabla de Posiciones</h2>
+                    <button id="admin-btn" onclick="pedirAdmin()" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:5px 14px; border-radius:8px; cursor:pointer; font-size:0.85rem;">
+                        Predicciones
+                    </button>
+                </div>
+
+                <!-- Barra cuando admin activo -->
+                <div id="admin-bar" class="admin-controls-bar">
+                    <span style="color:var(--gold); font-weight:bold; font-size:0.9rem;">⚙ Admin activo</span>
+                    <span style="color:#94a3b8; font-size:0.8rem;">Edita o elimina jugadores directamente en la tabla</span>
+                    <button id="lock-btn" onclick="bloquearAdmin()">🔒 Salir</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:40px">#</th>
+                            <th>Jugador</th>
+                            <th>Puntos</th>
+                            <th id="col-acciones" style="display:none;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-body"></tbody>
+                </table>
+
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modal contraseña admin -->
+    <div id="admin-modal">
+        <div class="modal-box">
+            <h3>🔑 Acceso Admin</h3>
+            <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:1rem;">Ingresa la contraseña de administrador</p>
+            <input type="password" id="admin-pass" placeholder="Contraseña admin" onkeydown="if(event.key==='Enter')verificarAdmin()">
+            <p id="admin-error">Contraseña incorrecta.</p>
+            <div class="modal-actions">
+                <button id="modal-cancel" onclick="cerrarModal()">Cancelar</button>
+                <button id="modal-ok" onclick="verificarAdmin()">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const usuarioActivo = localStorage.getItem('fw_usuario_activo');
+        if (!usuarioActivo) window.location.href = 'index.html';
+
+        const ADMIN_PASSWORD = 'slpt2020#'; // Cambia esta contraseña si quieres
+        let modoAdmin = false;
+
+        function renderTabla() {
+            let tabla = JSON.parse(localStorage.getItem('fw_tabla') || '[]');
+            tabla.sort((a, b) => b.puntos - a.puntos);
+
+            const tbody = document.getElementById('tabla-body');
+            tbody.innerHTML = '';
+
+            // Mostrar/ocultar columna acciones
+            document.getElementById('col-acciones').style.display = modoAdmin ? '' : 'none';
+
+            tabla.forEach((jugador, index) => {
+                const esActivo = jugador.usuario === usuarioActivo;
+                const tr = document.createElement('tr');
+                tr.style.background = esActivo ? 'rgba(34,197,94,0.07)' : '';
+
+                let accionesHTML = '';
+                if (modoAdmin) {
+                    accionesHTML = `<td>
+                        <button class="btn-edit" onclick="editarPuntos('${jugador.usuario}')">✏ Editar</button>
+                        <button class="btn-delete" onclick="eliminarJugador('${jugador.usuario}')">🗑 Eliminar</button>
+                    </td>`;
+                }
+
+                tr.innerHTML = `
+                    <td><span class="rank">#${index + 1}</span></td>
+                    <td id="td-nombre-${jugador.usuario}" style="font-weight:${esActivo ? 'bold' : 'normal'}; color:${esActivo ? 'var(--accent-color)' : 'inherit'}">
+                        ${jugador.usuario}${esActivo ? ' <span style="color:#94a3b8; font-size:0.8rem;">(tú)</span>' : ''}
+                    </td>
+                    <td id="td-pts-${jugador.usuario}"><span class="points">${jugador.puntos}</span> pts</td>
+                    ${accionesHTML}
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function editarPuntos(usuario) {
+            let tabla = JSON.parse(localStorage.getItem('fw_tabla') || '[]');
+            const jugador = tabla.find(u => u.usuario === usuario);
+            if (!jugador) return;
+
+            const nuevoPts = prompt(`Ingresa los nuevos puntos para "${usuario}":`, jugador.puntos);
+            if (nuevoPts === null) return; // canceló
+            const num = parseInt(nuevoPts);
+            if (isNaN(num) || num < 0) {
+                alert('Ingresa un número válido (mayor o igual a 0).');
+                return;
+            }
+            jugador.puntos = num;
+            localStorage.setItem('fw_tabla', JSON.stringify(tabla));
+            renderTabla();
+        }
+
+        function eliminarJugador(usuario) {
+            if (!confirm(`¿Seguro que quieres eliminar a "${usuario}" de la tabla?`)) return;
+            let tabla = JSON.parse(localStorage.getItem('fw_tabla') || '[]');
+            tabla = tabla.filter(u => u.usuario !== usuario);
+            localStorage.setItem('fw_tabla', JSON.stringify(tabla));
+            renderTabla();
+        }
+
+        function pedirAdmin() {
+            document.getElementById('admin-pass').value = '';
+            document.getElementById('admin-error').style.display = 'none';
+            document.getElementById('admin-modal').classList.add('show');
+            setTimeout(() => document.getElementById('admin-pass').focus(), 100);
+        }
+
+        function cerrarModal() {
+            document.getElementById('admin-modal').classList.remove('show');
+        }
+
+        function verificarAdmin() {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass === ADMIN_PASSWORD) {
+                modoAdmin = true;
+                cerrarModal();
+                document.getElementById('admin-bar').classList.add('show');
+                document.getElementById('admin-btn').style.display = 'none';
+                renderTabla();
+            } else {
+                document.getElementById('admin-error').style.display = 'block';
+            }
+        }
+
+        function bloquearAdmin() {
+            modoAdmin = false;
+            document.getElementById('admin-bar').classList.remove('show');
+            document.getElementById('admin-btn').style.display = '';
+            renderTabla();
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem('fw_usuario_activo');
+            window.location.href = 'index.html';
+        }
+
+        renderTabla();
+    </script>
+
+</body>
+</html>
