@@ -32,19 +32,35 @@
         </div>
     </div>
 
-    <script>
-        // ──────────────────────────────────────────────
-        // USUARIOS — agrega o edita aquí según necesites
-        // ──────────────────────────────────────────────
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDO5fHYaIbyhyill2SlnbrRmQAFSzFiEQg",
+            authDomain: "match-a7d84.firebaseapp.com",
+            projectId: "match-a7d84",
+            storageBucket: "match-a7d84.firebasestorage.app",
+            messagingSenderId: "35409465228",
+            appId: "1:35409465228:web:292a993b35d3d35371d0a9",
+            measurementId: "G-QF49XZ0QNG"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Usuarios registrados (agregar más aqui si necesitas)
         const USUARIOS = [
             { usuario: "rayc",   password: "match17" },
             { usuario: "eduah",  password: "mateo24" },
             { usuario: "victif", password: "victi00" },
-            { usuario: "gustam", password: "gustavo" },
             { usuario: "yamiljl", password: "aguacate" },
+            { usuario: "gustam", password: "gustavo" },
+            { usuario: "roydanm", password: "ale2503" },
         ];
 
-        function iniciarSesion() {
+        window.iniciarSesion = async function() {
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value;
             const errorMsg = document.getElementById('error-msg');
@@ -62,11 +78,28 @@
             btn.textContent = 'Entrando...';
             btn.disabled = true;
 
-            localStorage.setItem('fw_usuario_activo', user);
-            window.location.href = 'partidos.html';
-        }
+            try {
+                // Registrar usuario en Firebase si es la primera vez
+                const jugadorRef = ref(db, 'tabla/' + user);
+                const snapshot = await get(jugadorRef);
+                if (!snapshot.exists()) {
+                    await set(jugadorRef, { usuario: user, puntos: 0 });
+                }
 
-        document.addEventListener('keydown', e => { if (e.key === 'Enter') iniciarSesion(); });
+                // Solo guardamos el nombre de sesion localmente
+                localStorage.setItem('fw_usuario_activo', user);
+                window.location.href = 'partidos.html';
+
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = 'Error de conexión. Revisa que configuraste Firebase.';
+                errorMsg.style.display = 'block';
+                btn.textContent = 'Iniciar Sesión';
+                btn.disabled = false;
+            }
+        };
+
+        document.addEventListener('keydown', e => { if (e.key === 'Enter') window.iniciarSesion(); });
     </script>
 
 </body>
