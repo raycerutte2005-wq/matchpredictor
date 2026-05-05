@@ -116,24 +116,11 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.8rem;">
                     <div style="display:flex; align-items:center; gap:0.8rem;">
                         <h2 style="margin:0; border:none; padding:0;">Tabla de Posiciones</h2>
-                        <span class="sync-indicator" id="sync-status">📄 data.json</span>
+                        <span class="sync-indicator" id="sync-status"></span>
                     </div>
-                    <div>
-                        <button id="admin-btn" onclick="pedirAdmin()" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:5px 14px; border-radius:8px; cursor:pointer; font-size:0.85rem;">
-                            Admin
-                        </button>
-                        <button id="lock-btn" onclick="bloquearAdmin()" style="display:none;">🔒 Salir</button>
-                    </div>
-                </div>
+            
 
-                <!-- Instrucciones para el admin -->
-                <div id="admin-info">
-                    <strong>⚙ Modo Admin activo</strong><br>
-                    Para editar puntos, abre el archivo <code>data.json</code> en el repositorio de GitHub y modifica el valor de <code>"puntos"</code> de cada jugador. Los cambios se reflejan al recargar la página.<br><br>
-                    Para agregar un jugador nuevo, agrega una línea:<br>
-                    <code>{ "usuario": "nombre", "puntos": 0 }</code>
-                </div>
-
+        
                 <table>
                     <thead>
                         <tr>
@@ -155,31 +142,10 @@
         </aside>
     </div>
 
-    <!-- Modal contraseña admin -->
-    <div id="admin-modal">
-        <div class="modal-box">
-            <h3>🔑 Acceso Admin</h3>
-            <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:1rem;">Ingresa la contraseña de administrador</p>
-            <input type="password" id="admin-pass" placeholder="Contraseña admin" onkeydown="if(event.key==='Enter')verificarAdmin()">
-            <p id="admin-error">Contraseña incorrecta.</p>
-            <div class="modal-actions">
-                <button id="modal-cancel" onclick="cerrarModal()">Cancelar</button>
-                <button id="modal-ok" onclick="verificarAdmin()">Entrar</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         const usuarioActivo = localStorage.getItem('fw_usuario_activo');
         if (!usuarioActivo) window.location.href = 'index.html';
 
-        // ─────────────────────────────────────────
-        // CONTRASEÑA ADMIN — cámbiala si quieres
-        // ─────────────────────────────────────────
-        const ADMIN_PASSWORD = 'slpt2020#';
-
-        let modoAdmin = false;
-        let tablaActual = [];
 
         // Cargar datos desde data.json (sin caché para obtener lo más reciente)
         async function cargarTabla() {
@@ -225,36 +191,11 @@
             });
         }
 
-        function pedirAdmin() {
-            document.getElementById('admin-pass').value = '';
-            document.getElementById('admin-error').style.display = 'none';
-            document.getElementById('admin-modal').classList.add('show');
-            setTimeout(() => document.getElementById('admin-pass').focus(), 100);
-        }
 
         function cerrarModal() {
             document.getElementById('admin-modal').classList.remove('show');
         }
 
-        function verificarAdmin() {
-            const pass = document.getElementById('admin-pass').value;
-            if (pass === ADMIN_PASSWORD) {
-                modoAdmin = true;
-                cerrarModal();
-                document.getElementById('admin-info').classList.add('show');
-                document.getElementById('admin-btn').style.display = 'none';
-                document.getElementById('lock-btn').style.display = '';
-            } else {
-                document.getElementById('admin-error').style.display = 'block';
-            }
-        }
-
-        function bloquearAdmin() {
-            modoAdmin = false;
-            document.getElementById('admin-info').classList.remove('show');
-            document.getElementById('admin-btn').style.display = '';
-            document.getElementById('lock-btn').style.display = 'none';
-        }
 
         function cerrarSesion() {
             localStorage.removeItem('fw_usuario_activo');
