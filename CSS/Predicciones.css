@@ -58,7 +58,7 @@ nav {
 .nav-links {
     display: flex;
     list-style: none;
-    gap: 2rem;
+    gap: 1rem;
 }
 
 .nav-links a {
@@ -121,7 +121,6 @@ h2 {
     height: 60px; 
     border-radius: 30%;
     margin-bottom: 0.5rem;
-    background-image: url(../Imagenes/images\ \(2\).jpeg);
     background-size: cover;
     background-position: center;
 }
@@ -154,16 +153,7 @@ h2 {
 .predict-btn:hover{
     background-color: #94a3b8;
 }
-.team-logo-b{
-    background: #ddd;
-    width: 50px; 
-    height: 50px; 
-    border-radius: 20%;
-    margin-bottom: 0.5rem;
-    background-image: url(../Imagenes/images.jpeg);
-    background-size: cover;
-    background-position: center;
-}
+
 /* --- TABLA DE POSICIONES --- */
 .leaderboard {
     background-color: var(--secondary-bg);
