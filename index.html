@@ -28,46 +28,79 @@
                 Usuario o contraseña incorrectos.
             </p>
 
-            <button onclick="iniciarSesion()" class="predict-btn" style="width: 100%; padding: 1rem;">Iniciar Sesión</button>
+            <button onclick="iniciarSesion()" id="btn-login" class="predict-btn" style="width: 100%; padding: 1rem;">Iniciar Sesión</button>
         </div>
     </div>
 
-    <script>
-        // Base de usuarios (puedes agregar más aquí)
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
+
+        // ============================================================
+        // REEMPLAZA ESTOS VALORES CON LOS DE TU PROYECTO EN FIREBASE
+        // (Lee las instrucciones al final de este archivo)
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com",
+            projectId: "TU_PROYECTO",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Usuarios registrados (agregar más aqui si necesitas)
         const USUARIOS = [
-            { usuario: "rayc", password: "match17" },
-            { usuario: "eduah", password: "mateo24" },
+            { usuario: "rayc",   password: "match17" },
+            { usuario: "eduah",  password: "mateo24" },
             { usuario: "victif", password: "victi00" },
         ];
 
-        function iniciarSesion() {
+        window.iniciarSesion = async function() {
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value;
             const errorMsg = document.getElementById('error-msg');
+            const btn = document.getElementById('btn-login');
 
+            errorMsg.style.display = 'none';
             const encontrado = USUARIOS.find(u => u.usuario === user && u.password === pass);
 
-            if (encontrado) {
-                // Guardar sesión en localStorage
-                localStorage.setItem('fw_usuario_activo', user);
+            if (!encontrado) {
+                errorMsg.textContent = 'Usuario o contraseña incorrectos.';
+                errorMsg.style.display = 'block';
+                return;
+            }
 
-                // Registrar en tabla si es nuevo usuario (0 pts)
-                let tabla = JSON.parse(localStorage.getItem('fw_tabla') || '[]');
-                const yaExiste = tabla.find(u => u.usuario === user);
-                if (!yaExiste) {
-                    tabla.push({ usuario: user, puntos: 0 });
-                    localStorage.setItem('fw_tabla', JSON.stringify(tabla));
+            btn.textContent = 'Entrando...';
+            btn.disabled = true;
+
+            try {
+                // Registrar usuario en Firebase si es la primera vez
+                const jugadorRef = ref(db, 'tabla/' + user);
+                const snapshot = await get(jugadorRef);
+                if (!snapshot.exists()) {
+                    await set(jugadorRef, { usuario: user, puntos: 0 });
                 }
 
-                window.location.href = "partidos.html";
-            } else {
-                errorMsg.style.display = "block";
-            }
-        }
+                // Solo guardamos el nombre de sesion localmente
+                localStorage.setItem('fw_usuario_activo', user);
+                window.location.href = 'partidos.html';
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') iniciarSesion();
-        });
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = 'Error de conexión. Revisa que configuraste Firebase.';
+                errorMsg.style.display = 'block';
+                btn.textContent = 'Iniciar Sesión';
+                btn.disabled = false;
+            }
+        };
+
+        document.addEventListener('keydown', e => { if (e.key === 'Enter') window.iniciarSesion(); });
     </script>
 
 </body>

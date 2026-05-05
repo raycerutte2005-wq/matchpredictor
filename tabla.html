@@ -29,20 +29,6 @@
         .btn-edit:hover { background: #22c55e; color: #0f172a; }
         .btn-delete { background: #7f1d1d; color: #fca5a5; margin-left: 4px; }
         .btn-delete:hover { background: #ef4444; color: #fff; }
-        .input-pts {
-            width: 70px;
-            padding: 4px 8px;
-            background: #0f172a;
-            color: #f8fafc;
-            border: 2px solid #22c55e;
-            border-radius: 6px;
-            font-size: 1rem;
-            text-align: center;
-        }
-        .admin-lock {
-            display: none;
-        }
-        /* Modal de contraseña admin */
         #admin-modal {
             display: none;
             position: fixed;
@@ -90,6 +76,7 @@
             background: rgba(245,158,11,0.1);
             border: 1px solid rgba(245,158,11,0.3);
             border-radius: 10px;
+            flex-wrap: wrap;
         }
         .admin-controls-bar.show { display: flex; }
         #lock-btn {
@@ -102,6 +89,23 @@
             font-size: 0.8rem;
         }
         #lock-btn:hover { border-color: #ef4444; color: #ef4444; }
+        .sync-indicator {
+            font-size: 0.75rem;
+            color: #22c55e;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .sync-dot {
+            width: 7px; height: 7px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
     </style>
 </head>
 <body>
@@ -121,7 +125,12 @@
             <div class="leaderboard" style="margin-top: 0;">
 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.8rem;">
-                    <h2 style="margin:0; border:none; padding:0;">Tabla de Posiciones</h2>
+                    <div style="display:flex; align-items:center; gap:0.8rem;">
+                        <h2 style="margin:0; border:none; padding:0;">Tabla de Posiciones</h2>
+                        <span class="sync-indicator" id="sync-status">
+                            <span class="sync-dot"></span> En vivo
+                        </span>
+                    </div>
                     <button id="admin-btn" onclick="pedirAdmin()" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:5px 14px; border-radius:8px; cursor:pointer; font-size:0.85rem;">
                         Predicciones
                     </button>
@@ -143,7 +152,9 @@
                             <th id="col-acciones" style="display:none;">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="tabla-body"></tbody>
+                    <tbody id="tabla-body">
+                        <tr><td colspan="3" style="text-align:center; color:#94a3b8; padding:2rem;">Cargando...</td></tr>
+                    </tbody>
                 </table>
 
             </div>
@@ -164,22 +175,55 @@
         </div>
     </div>
 
-    <script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
+
+        // ============================================================
+        // REEMPLAZA ESTOS VALORES CON LOS DE TU PROYECTO EN FIREBASE
+        // (Los mismos que pusiste en index.html)
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com",
+            projectId: "TU_PROYECTO",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
         const usuarioActivo = localStorage.getItem('fw_usuario_activo');
         if (!usuarioActivo) window.location.href = 'index.html';
 
-        const ADMIN_PASSWORD = 'slpt2020#'; // Cambia esta contraseña si quieres
+        const ADMIN_PASSWORD = 'slpt2020#';
         let modoAdmin = false;
+        let tablaActual = [];
 
-        function renderTabla() {
-            let tabla = JSON.parse(localStorage.getItem('fw_tabla') || '[]');
-            tabla.sort((a, b) => b.puntos - a.puntos);
+        // Escuchar cambios en tiempo real — se actualiza automáticamente
+        // en TODOS los dispositivos cuando alguien cambia algo
+        const tablaRef = ref(db, 'tabla');
+        onValue(tablaRef, (snapshot) => {
+            const data = snapshot.val();
+            tablaActual = data ? Object.values(data) : [];
+            renderTabla(tablaActual);
+        });
 
+        function renderTabla(tabla) {
+            tabla = [...tabla].sort((a, b) => b.puntos - a.puntos);
             const tbody = document.getElementById('tabla-body');
             tbody.innerHTML = '';
 
-            // Mostrar/ocultar columna acciones
             document.getElementById('col-acciones').style.display = modoAdmin ? '' : 'none';
+
+            if (tabla.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:2rem;">No hay jugadores aún.</td></tr>';
+                return;
+            }
 
             tabla.forEach((jugador, index) => {
                 const esActivo = jugador.usuario === usuarioActivo;
@@ -189,85 +233,90 @@
                 let accionesHTML = '';
                 if (modoAdmin) {
                     accionesHTML = `<td>
-                        <button class="btn-edit" onclick="editarPuntos('${jugador.usuario}')">✏ Editar</button>
-                        <button class="btn-delete" onclick="eliminarJugador('${jugador.usuario}')">🗑 Eliminar</button>
+                        <button class="btn-edit" onclick="window.editarPuntos('${jugador.usuario}')">✏ Editar</button>
+                        <button class="btn-delete" onclick="window.eliminarJugador('${jugador.usuario}')">🗑 Eliminar</button>
                     </td>`;
                 }
 
                 tr.innerHTML = `
                     <td><span class="rank">#${index + 1}</span></td>
-                    <td id="td-nombre-${jugador.usuario}" style="font-weight:${esActivo ? 'bold' : 'normal'}; color:${esActivo ? 'var(--accent-color)' : 'inherit'}">
+                    <td style="font-weight:${esActivo ? 'bold' : 'normal'}; color:${esActivo ? 'var(--accent-color)' : 'inherit'}">
                         ${jugador.usuario}${esActivo ? ' <span style="color:#94a3b8; font-size:0.8rem;">(tú)</span>' : ''}
                     </td>
-                    <td id="td-pts-${jugador.usuario}"><span class="points">${jugador.puntos}</span> pts</td>
+                    <td><span class="points">${jugador.puntos}</span> pts</td>
                     ${accionesHTML}
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function editarPuntos(usuario) {
-            let tabla = JSON.parse(localStorage.getItem('fw_tabla') || '[]');
-            const jugador = tabla.find(u => u.usuario === usuario);
+        // Editar puntos → guarda en Firebase → se actualiza en TODOS
+        window.editarPuntos = async function(usuario) {
+            const jugador = tablaActual.find(u => u.usuario === usuario);
             if (!jugador) return;
 
-            const nuevoPts = prompt(`Ingresa los nuevos puntos para "${usuario}":`, jugador.puntos);
-            if (nuevoPts === null) return; // canceló
+            const nuevoPts = prompt(`Nuevos puntos para "${usuario}":`, jugador.puntos);
+            if (nuevoPts === null) return;
             const num = parseInt(nuevoPts);
             if (isNaN(num) || num < 0) {
-                alert('Ingresa un número válido (mayor o igual a 0).');
+                alert('Ingresa un número válido (≥ 0).');
                 return;
             }
-            jugador.puntos = num;
-            localStorage.setItem('fw_tabla', JSON.stringify(tabla));
-            renderTabla();
-        }
 
-        function eliminarJugador(usuario) {
+            try {
+                await update(ref(db, 'tabla/' + usuario), { puntos: num });
+            } catch (err) {
+                alert('Error al guardar. Verifica tu conexión.');
+                console.error(err);
+            }
+        };
+
+        // Eliminar jugador → borra de Firebase → se actualiza en TODOS
+        window.eliminarJugador = async function(usuario) {
             if (!confirm(`¿Seguro que quieres eliminar a "${usuario}" de la tabla?`)) return;
-            let tabla = JSON.parse(localStorage.getItem('fw_tabla') || '[]');
-            tabla = tabla.filter(u => u.usuario !== usuario);
-            localStorage.setItem('fw_tabla', JSON.stringify(tabla));
-            renderTabla();
-        }
+            try {
+                await remove(ref(db, 'tabla/' + usuario));
+            } catch (err) {
+                alert('Error al eliminar.');
+                console.error(err);
+            }
+        };
 
-        function pedirAdmin() {
+        window.pedirAdmin = function() {
             document.getElementById('admin-pass').value = '';
             document.getElementById('admin-error').style.display = 'none';
             document.getElementById('admin-modal').classList.add('show');
             setTimeout(() => document.getElementById('admin-pass').focus(), 100);
-        }
+        };
 
-        function cerrarModal() {
+        window.cerrarModal = function() {
             document.getElementById('admin-modal').classList.remove('show');
-        }
+        };
 
-        function verificarAdmin() {
+        window.verificarAdmin = function() {
             const pass = document.getElementById('admin-pass').value;
             if (pass === ADMIN_PASSWORD) {
                 modoAdmin = true;
                 cerrarModal();
                 document.getElementById('admin-bar').classList.add('show');
                 document.getElementById('admin-btn').style.display = 'none';
-                renderTabla();
+                renderTabla(tablaActual);
             } else {
                 document.getElementById('admin-error').style.display = 'block';
             }
-        }
+        };
 
-        function bloquearAdmin() {
+        window.bloquearAdmin = function() {
             modoAdmin = false;
             document.getElementById('admin-bar').classList.remove('show');
             document.getElementById('admin-btn').style.display = '';
-            renderTabla();
-        }
+            renderTabla(tablaActual);
+        };
 
-        function cerrarSesion() {
+        window.cerrarSesion = function() {
             localStorage.removeItem('fw_usuario_activo');
             window.location.href = 'index.html';
-        }
-
-        renderTabla();
+        };
     </script>
 
 </body>
