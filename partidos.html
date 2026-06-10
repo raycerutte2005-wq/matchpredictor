@@ -343,7 +343,7 @@
                 esCambio = true;
                 divAnterior.style.display = 'block';
                 document.getElementById('texto-anterior').textContent = predAnterior.marcador;
-                btnConfirmar.textContent = '🔄 Actualizar';
+                btnConfirmar.textContent = 'Actualizar';
                 // Pre-llenar con valores anteriores
                 const partes = predAnterior.marcador.split('-');
                 document.getElementById('goles-local').value = partes[0]?.trim() || 0;
@@ -394,12 +394,12 @@
                 marcarPrediccionEnBoton(cardActual, marcador);
 
                 document.getElementById('sending-overlay').classList.remove('show');
-                mostrarToast(esCambio ? '🔄 Predicción actualizada' : '✔ Predicción enviada');
+                mostrarToast(esCambio ? 'Predicción actualizada' : 'Predicción enviada');
 
             } catch (error) {
                 console.error('Error EmailJS:', error);
                 document.getElementById('sending-overlay').classList.remove('show');
-                mostrarToast('❌ Error al enviar.', true);
+                mostrarToast('Error al enviar.', true);
             }
         }
 
@@ -416,13 +416,13 @@
 
             btnOriginal.outerHTML = `
                 <div class="btns-prediccion" id="btn-area-${cardId}">
-                    <span class="btn-predicho" title="${textoPredicho}">✓ ${marcador}</span>
-                    <button class="btn-cambiar" onclick="abrirModal('${pred?.local || localActual}', '${pred?.visitante || visitanteActual}', '${cardId}')">✏ Cambiar</button>
+                    <span class="btn-predicho" title="${textoPredicho}">${marcador}</span>
+                    <button class="btn-cambiar" onclick="abrirModal('${pred?.local || localActual}', '${pred?.visitante || visitanteActual}', '${cardId}')">Cambiar</button>
                 </div>
             `;
         }
 
-        function mostrarToast(mensaje = '✔ Predicción enviada', esError = false) {
+        function mostrarToast(mensaje = 'Predicción enviada', esError = false) {
             const toast = document.getElementById('toast');
             toast.textContent = mensaje;
             toast.style.background = esError ? '#ef4444' : '#22c55e';
