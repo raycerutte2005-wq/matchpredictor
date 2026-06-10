@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         .btn-predicho {
-            background: #356ee9;
+            background: #1a3e8b;
             color: #bbf7d0;
             border: 1.5px solid #356ee9;
             border-radius: 8px;
@@ -259,7 +259,7 @@
             <p style="color:#94a3b8; text-align:center; margin-bottom:1rem; font-size:0.9rem;">Ingresa tu predicción de marcador</p>
             <div id="prediccion-anterior" style="display:none; text-align:center; margin-bottom:1rem; padding:0.6rem; background:rgba(34,197,94,0.1); border:1px solid #22c55e33; border-radius:8px;">
                 <span style="color:#94a3b8; font-size:0.8rem;">Tu predicción anterior: </span>
-                <span id="texto-anterior" style="color:#22c55e; font-weight:bold; font-size:0.85rem;"></span>
+                <span id="texto-anterior" style="color:#356ee9; font-weight:bold; font-size:0.85rem;"></span>
             </div>
             <div style="display:flex; align-items:center; gap:1rem; justify-content:center; margin-bottom:1.5rem;">
                 <div style="text-align:center;">
@@ -267,7 +267,7 @@
                     <input type="number" id="goles-local" min="0" max="20" value="0"
                         style="width:70px; padding:0.8rem; font-size:1.5rem; text-align:center; background:#0f172a; color:#f8fafc; border:2px solid #334155; border-radius:8px;">
                 </div>
-                <div style="color:#22c55e; font-size:1.5rem; font-weight:bold;">-</div>
+                <div style="color:#356ee9; font-size:1.5rem; font-weight:bold;">-</div>
                 <div style="text-align:center;">
                     <div id="nombre-visitante" style="color:#f8fafc; font-size:0.85rem; margin-bottom:0.5rem;"></div>
                     <input type="number" id="goles-visitante" min="0" max="20" value="0"
@@ -282,7 +282,7 @@
     </div>
 
     <!-- Toast -->
-    <div id="toast" style="display:none; position:fixed; bottom:2rem; right:2rem; background:#22c55e; color:#0f172a; padding:1rem 1.5rem; border-radius:10px; font-weight:bold; z-index:2000;">
+    <div id="toast" style="display:none; position:fixed; bottom:2rem; right:2rem; background:#356ee9; color:#0f172a; padding:1rem 1.5rem; border-radius:10px; font-weight:bold; z-index:2000;">
         ✔ Predicción enviada
     </div>
 
@@ -399,7 +399,7 @@
             } catch (error) {
                 console.error('Error EmailJS:', error);
                 document.getElementById('sending-overlay').classList.remove('show');
-                mostrarToast('❌ Error al enviar. Revisa EmailJS.', true);
+                mostrarToast('❌ Error al enviar.', true);
             }
         }
 
